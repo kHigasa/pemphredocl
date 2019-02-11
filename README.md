@@ -1,4 +1,4 @@
-# rustreeem
+# rustreeem - RustStreem
 influenced on matz streem
 
 [![Build Status](https://travis-ci.org/kHigasa/rustreeem.svg?branch=master)](https://travis-ci.org/kHigasa/rustreeem)
