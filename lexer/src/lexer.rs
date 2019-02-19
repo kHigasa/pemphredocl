@@ -1,13 +1,13 @@
 //! Lexing Rustreeem source code.
 //! Rustreeem source code can be translated into separate tokens.
 
-pub use token::Token;
+pub use super::token::Token;
 
-pub struct Lexer<T> {
+pub struct Lexer<T: Iterator<Item = char>> {
     input: T,
-    chr: Option<char>,
+    cur: Option<char>,
+    nxt: Option<char>,
     pos: Position,
-    nxt_pos: Position,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -21,38 +21,45 @@ impl Position {
         Position { row, column }
     }
 
-    pub fn get_row(&self) -> {
+    pub fn get_row(&self) -> usize {
         self.row
     }
 
-    pub fn get_column(&self) -> {
+    pub fn get_column(&self) -> usize {
         self.column
     }
 }
 
-impl<T> Lexer<T> {
+impl<T> Lexer<T> where T: Iterator<Item = char> {
     pub fn new(input: T) -> Self {
         let mut lxr = Lexer {
             input,
-            chr: None,
-            pos: Position::new(0, 0),,
+            cur: None,
+            nxt: None,
+            pos: Position::new(0, 0),
         };
         lxr.read_char();
+        lxr.read_char();
+        // Start at top row (=1) left column (=1)
+        lxr.pos.row = 1;
+        lxr.pos.column = 1;
         lxr
     }
 
     fn read_char(&mut self) {
+        self.cur = self.nxt;
+        self.nxt = self.input.next();
         self.pos.column += 1;
     }
 
-    fn next(&mut self) -> Option<Token> {
-        loop {
-            match self.chr {
-                Some(' ') => {
-                    self.read_char();
-                }
-            }
-        }
-    }
+    //fn next(&mut self) -> Option<Token> {
+    //    loop {
+    //        match self.cur {
+    //            Some(' ') => {
+    //                self.read_char();
+    //            }
+    //        }
+    //    }
+    //}
 }
 

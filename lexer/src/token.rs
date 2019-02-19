@@ -1,7 +1,8 @@
 //! Rustreeem token definitions.
+//! Rustreeem source code can be tokenized in a sequence of these tokens
+
 use num_bigint::BigInt;
 
-//! Rustreeem source code can be tokenized in a sequence of these tokens
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Ident(String),
