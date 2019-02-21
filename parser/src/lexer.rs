@@ -47,7 +47,7 @@ impl<T> Lexer<T> where T: Iterator<Item = char> {
         };
         lxr.next_char();
         lxr.next_char();
-        // Start at top row (=1) left column (=1)
+        // Start at top row (=1) left column (=1).
         lxr.location.row = 1;
         lxr.location.column = 1;
         lxr
@@ -61,9 +61,16 @@ impl<T> Lexer<T> where T: Iterator<Item = char> {
         c
     }
 
-    fn get_pos(&self) -> Loc {
+    fn get_loc(&self) -> Loc {
         self.location.clone()
     }
+
+    // Lexer helper functions:
+    // ToDo:
+    // fn lex_identifier(&mut self) -> Spanned<Tok> {
+    // }
+    // fn lex_number(&mut self) -> Spanned<Tok> {
+    // }
 }
 
 impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
@@ -72,18 +79,83 @@ impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             match self.chr0 {
+                Some('+') => {
+                    let tok_start = self.get_loc();
+                    self.next_char();
+                    match self.chr0 {
+                        Some('=') => {
+                            self.next_char();
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::PlusEqual, tok_end)));
+                        }
+                        _ => {
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Plus, tok_end)));
+                        }
+                    }
+                }
                 Some('-') => {
-                    let tok_start = self.get_pos();
+                    let tok_start = self.get_loc();
+                    self.next_char();
+                    match self.chr0 {
+                        Some('=') => {
+                            self.next_char();
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::MinusEqual, tok_end)));
+                        }
+                        Some('>') => {
+                            self.next_char();
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Rarrow, tok_end)));
+                        }
+                        _ => {
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Minus, tok_end)));
+                        }
+                    }
+                }
+                Some('*') => {
+                    let tok_start = self.get_loc();
+                    self.next_char();
+                    match self.chr0 {
+                        Some('=') => {
+                            self.next_char();
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::StarEqual, tok_end)));
+                        }
+                        _ => {
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Star, tok_end)));
+                        }
+                    }
+                }
+                Some('/') => {
+                    let tok_start = self.get_loc();
+                    self.next_char();
+                    match self.chr0 {
+                        Some('=') => {
+                            self.next_char();
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::SlashEqual, tok_end)));
+                        }
+                        _ => {
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Slash, tok_end)));
+                        }
+                    }
+                }
+                Some('|') => {
+                    let tok_start = self.get_loc();
                     self.next_char();
                     match self.chr0 {
                         Some('>') => {
                             self.next_char();
-                            let tok_end = self.get_pos();
+                            let tok_end = self.get_loc();
                             return Some(Ok((tok_start, Tok::Rarrow, tok_end)));
                         }
                         _ => {
-                            let tok_end = self.get_pos();
-                            return Some(Ok((tok_start, Tok::Minus, tok_end)));
+                            let tok_end = self.get_loc();
+                            return Some(Ok((tok_start, Tok::Vbar, tok_end)));
                         }
                     }
                 }
@@ -109,10 +181,18 @@ mod tests {
     }
 
     #[test]
-    fn test_rarrow() {
-        let source = String::from("->");
+    fn test_operators() {
+        let source = String::from("++=*/*=-->");
         let tokens = lex_source(&source);
-        assert_eq!(tokens, vec![Tok::Rarrow]);
+        assert_eq!(tokens, vec![
+                   Tok::Plus,
+                   Tok::PlusEqual,
+                   Tok::Star,
+                   Tok::Slash,
+                   Tok::StarEqual,
+                   Tok::Minus,
+                   Tok::Rarrow,
+        ]);
     }
 }
 
