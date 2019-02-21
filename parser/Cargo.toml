@@ -1,5 +1,5 @@
 [package]
-name = "rustreeem_parxer"
+name = "rustreeem_parser"
 version = "0.1.0"
 authors = ["khigasa <kojihigasa@gmail.com>"]
 edition = "2018"

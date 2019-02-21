@@ -4,7 +4,7 @@
 use num_bigint::BigInt;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum Tok {
     Ident(String),
     Int(BigInt),
 
