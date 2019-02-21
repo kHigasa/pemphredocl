@@ -3,6 +3,7 @@
 
 pub use super::token::Tok;
 use num_bigint::BigInt;
+use std::collections::HashMap;
 
 pub type Spanned<Tok> = Result<(Loc, Tok, Loc), LexicalError>;
 
@@ -29,6 +30,12 @@ impl Loc {
     pub fn get_column(&self) -> usize {
         self.column
     }
+}
+
+pub fn get_keywords() -> HashMap<String, Tok> {
+    let mut keywords: HashMap<String, Tok> = HashMap::new();
+    keywords.insert(String::from("lambda"), Tok::Lambda);
+    keywords
 }
 
 pub struct Lexer<T: Iterator<Item = char>> {
@@ -66,6 +73,14 @@ impl<T> Lexer<T> where T: Iterator<Item = char> {
         self.location.clone()
     }
 
+    // Check functions:
+    fn is_char(&self) -> bool {
+        match self.chr0 {
+            Some('a'..='z') | Some('A'..='Z') | Some('_') | Some('0'..='9') => true,
+            _ => false,
+        }
+    }
+
     fn is_number(&self, radix: u32) -> bool {
         match radix {
             10 => match self.chr0 {
@@ -77,13 +92,24 @@ impl<T> Lexer<T> where T: Iterator<Item = char> {
     }
 
     // Lexer helper functions:
-    // ToDo:
-    // fn lex_identifier(&mut self) -> Spanned<Tok> {
-    // }
+    fn lex_identifier(&mut self) -> Spanned<Tok> {
+        let mut ident = String::new();
+        let tok_start = self.get_loc();
+        while self.is_char() {
+            ident.push(self.next_char().unwrap());
+        }
+        let tok_end = self.get_loc();
+        let mut keywords = get_keywords();
+        if keywords.contains_key(&ident) {
+            Ok((tok_start, keywords.remove(&ident).unwrap(), tok_end))
+        } else {
+            Ok((tok_start, Tok::Ident(String::from(ident)), tok_end))
+        }
+    }
 
     fn lex_number(&mut self) -> Spanned<Tok> {
-        let tok_start = self.get_loc();
         let mut value_str = String::new();
+        let tok_start = self.get_loc();
         while self.is_number(10) {
             value_str.push(self.next_char().unwrap());
         }
@@ -99,6 +125,7 @@ impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
         loop {
             match self.chr0 {
                 Some('0'..='9') => return Some(self.lex_number()),
+                Some('_') | Some('a'..='z') | Some('A'..='Z') => return Some(self.lex_identifier()),
                 Some('+') => {
                     let tok_start = self.get_loc();
                     self.next_char();
