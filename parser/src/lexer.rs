@@ -2,6 +2,7 @@
 //! Rustreeem source code can be translated into separate tokens.
 
 pub use super::token::Tok;
+use num_bigint::BigInt;
 
 pub type Spanned<Tok> = Result<(Loc, Tok, Loc), LexicalError>;
 
@@ -65,12 +66,30 @@ impl<T> Lexer<T> where T: Iterator<Item = char> {
         self.location.clone()
     }
 
+    fn is_number(&self, radix: u32) -> bool {
+        match radix {
+            10 => match self.chr0 {
+                Some('0'..='9') => true,
+                _ => false,
+            },
+            x => unimplemented!("Radix not implemented: {}", x),
+        }
+    }
+
     // Lexer helper functions:
     // ToDo:
     // fn lex_identifier(&mut self) -> Spanned<Tok> {
     // }
-    // fn lex_number(&mut self) -> Spanned<Tok> {
-    // }
+
+    fn lex_number(&mut self) -> Spanned<Tok> {
+        let tok_start = self.get_loc();
+        let mut value_str = String::new();
+        while self.is_number(10) {
+            value_str.push(self.next_char().unwrap());
+        }
+        let tok_end = self.get_loc();
+        Ok((tok_start, Tok::Int(value_str.parse::<BigInt>().unwrap()), tok_end))
+    }
 }
 
 impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
@@ -79,6 +98,7 @@ impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             match self.chr0 {
+                Some('0'..='9') => return Some(self.lex_number()),
                 Some('+') => {
                     let tok_start = self.get_loc();
                     self.next_char();
@@ -172,6 +192,7 @@ impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
 #[cfg(test)]
 mod tests {
     use super::{Lexer, Tok};
+    use num_bigint::BigInt;
     use std::iter::FromIterator;
     use std::iter::Iterator;
 
@@ -182,7 +203,7 @@ mod tests {
 
     #[test]
     fn test_operators() {
-        let source = String::from("++=*/*=-->");
+        let source = String::from("++=*/*=-->3");
         let tokens = lex_source(&source);
         assert_eq!(tokens, vec![
                    Tok::Plus,
@@ -192,6 +213,7 @@ mod tests {
                    Tok::StarEqual,
                    Tok::Minus,
                    Tok::Rarrow,
+                   Tok::Int(BigInt::from(3)),
         ]);
     }
 }
