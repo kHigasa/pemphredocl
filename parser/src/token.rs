@@ -13,16 +13,5 @@ pub enum Tok {
     Minus,
     Star,
     Slash,
-    Vbar,
-    PlusEqual,
-    MinusEqual,
-    StarEqual,
-    SlashEqual,
-
-    PipeStream,
-    Rarrow,
-
-    // Keywords (alphabetically)
-    Lambda,
 }
 
